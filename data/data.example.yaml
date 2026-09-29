@@ -1,0 +1,19 @@
+# Sample data.yaml — replace with your dataset's classes and paths
+#
+# After you extract your dataset into data/dataset/ run:
+#   python src/train.py --dataset yourdata.zip
+# and the script will generate the correct data.yaml automatically.
+
+# Absolute path to dataset root folder
+path: ./data/dataset
+
+# Relative (or absolute) paths to image folders
+train: ./data/dataset/train/images
+val:   ./data/dataset/valid/images
+test:  ./data/dataset/test/images
+
+# Class count and names — update this for your dataset!
+nc: 2
+names:
+  0: antenna_tower
+  1: cell_tower
