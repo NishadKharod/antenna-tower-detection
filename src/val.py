@@ -1,17 +1,27 @@
 import argparse
 import os
 import sys
+from pathlib import Path
 
 import yaml
 from ultralytics import YOLO
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+BUNDLED_DATA_YAML = str(PROJECT_ROOT / "data.yaml")
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Validate a trained YOLO11 Antenna Tower detector"
+        description="Validate a trained YOLO11 Antenna Tower detector (1 class: 'antenna')"
     )
     parser.add_argument("--weights", type=str, required=True, help="Path to best.pt")
-    parser.add_argument("--data", type=str, required=True, help="Path to data.yaml")
+    parser.add_argument(
+        "--data",
+        type=str,
+        default=BUNDLED_DATA_YAML,
+        help=f"Path to data.yaml (default: {BUNDLED_DATA_YAML} — the bundled dataset)",
+    )
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--batch", type=int, default=16)
     parser.add_argument("--split", type=str, default="val", choices=["val", "test"])

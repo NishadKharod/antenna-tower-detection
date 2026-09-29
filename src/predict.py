@@ -1,20 +1,27 @@
 import argparse
 import os
 import sys
+from pathlib import Path
 
 from ultralytics import YOLO
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+BUNDLED_TEST_IMAGES = str(
+    PROJECT_ROOT / "cell tower antenna detection.v2i.yolov11" / "test" / "images"
+)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Run inference with trained YOLO11 Antenna Tower detector"
+        description="Run inference with trained YOLO11 Antenna Tower detector (1 class: 'antenna')"
     )
     parser.add_argument("--weights", type=str, required=True, help="Path to best.pt")
     parser.add_argument(
         "--source",
         type=str,
-        required=True,
-        help="Image path, folder, video, or 0 for webcam",
+        default=BUNDLED_TEST_IMAGES,
+        help=f"Image path, folder, video, or 0 for webcam (default: bundled test images folder)",
     )
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--conf", type=float, default=0.25)

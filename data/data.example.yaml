@@ -1,19 +1,29 @@
-# Sample data.yaml — replace with your dataset's classes and paths
+# ----------------------------------------------------------------
+# data.yaml used by this project (canonical copy lives at ./data.yaml)
+# ----------------------------------------------------------------
+# Dataset source:
+#   Roboflow  "Cell Tower Antenna Detection" v2i.yolov11
+#   URL: https://universe.roboflow.com/cradpole/cell-tower-antenna-detection/dataset/2
+#   License: CC BY 4.0
 #
-# After you extract your dataset into data/dataset/ run:
-#   python src/train.py --dataset yourdata.zip
-# and the script will generate the correct data.yaml automatically.
+# This bundled dataset lives in the repo at:
+#   ./cell tower antenna detection.v2i.yolov11/
+#
+# Classes (nc=1):
+#   0: antenna
 
-# Absolute path to dataset root folder
-path: ./data/dataset
+path: ./cell tower antenna detection.v2i.yolov11
+train: ./cell tower antenna detection.v2i.yolov11/train/images
+val:   ./cell tower antenna detection.v2i.yolov11/valid/images
+test:  ./cell tower antenna detection.v2i.yolov11/test/images
 
-# Relative (or absolute) paths to image folders
-train: ./data/dataset/train/images
-val:   ./data/dataset/valid/images
-test:  ./data/dataset/test/images
+nc: 1
+names: ['antenna']
 
-# Class count and names — update this for your dataset!
-nc: 2
-names:
-  0: antenna_tower
-  1: cell_tower
+roboflow:
+  workspace: cradpole
+  project: cell-tower-antenna-detection
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/cradpole/cell-tower-antenna-detection/dataset/2
+

@@ -16,6 +16,9 @@ from PIL import Image
 from ultralytics import YOLO
 
 
+DEFAULT_CLASS_NAMES = ["antenna"]
+
+
 @dataclass
 class Detection:
     class_id: int
@@ -53,7 +56,11 @@ class DetectionResult:
 
 
 class AntennaTowerDetector:
-    """Loads a YOLO11 checkpoint and runs antenna tower detection."""
+    """Loads a YOLO11 checkpoint and runs antenna tower detection.
+
+    Default class mapping (matches the bundled data.yaml, nc=1):
+        0 -> "antenna"
+    """
 
     def __init__(
         self,
@@ -67,7 +74,7 @@ class AntennaTowerDetector:
                 "Train a model first or point to a valid best.pt file."
             )
         self.weights_path = weights_path
-        self.class_names = class_names or []
+        self.class_names = list(class_names) if class_names else list(DEFAULT_CLASS_NAMES)
         self.device = self._resolve_device(device)
         self._model: Optional[YOLO] = None
 
@@ -90,8 +97,13 @@ class AntennaTowerDetector:
         """Lazily load the model (call once before predict())."""
         if self._model is None:
             self._model = YOLO(self.weights_path)
-            if not self.class_names:
-                self.class_names = list(self._model.names.values()) if hasattr(self._model, "names") else []
+            # Trust the model's class names if it was trained with matching
+            # classes; but fall back to the DEFAULT_CLASS_NAMES so we don't
+            # depend on the model being present at import time.
+            if hasattr(self._model, "names") and self._model.names:
+                model_names = list(self._model.names.values())
+                if len(model_names) == len(self.class_names):
+                    self.class_names = model_names
         return self
 
     @property

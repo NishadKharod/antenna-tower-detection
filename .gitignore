@@ -1,8 +1,11 @@
-# Data
+# Data (ignore generic catch-all folders, keep the bundled dataset folder)
 data/
 dataset/
 *.zip
 *.tar.gz
+
+# Ultralytics-generated label caches (auto-rebuild from .txt labels)
+**/*.cache
 
 # Weights
 weights/

@@ -1,14 +1,22 @@
 """Flask web server exposing Antenna Tower Detection via HTTP.
 
+Dataset bundled with this repo:
+    "Cell Tower Antenna Detection v2i" (Roboflow) — 1 class: antenna
+
 Endpoints
 ---------
-GET  /health               → health check
+GET  /health               → health check + dataset / classes info
 GET  /                     → simple browser UI for drag-and-drop uploads
+GET  /api/info             → dataset classes, paths, defaults
 POST /api/detect           → JSON: upload image, get detections + bboxes
 POST /api/detect/render    → PNG: upload image, get annotated image back
 
 Usage
 -----
+    # 1. First train to produce a best.pt
+    python src/train.py
+
+    # 2. Then launch the API server
     python src/app.py --weights runs/tower_detection/yolo11_tower_detector/weights/best.pt --host 0.0.0.0 --port 5000
 
 Then integrate from your website by POSTing multipart/form-data to
@@ -23,6 +31,7 @@ import sys
 import time
 from pathlib import Path
 
+import yaml
 from flask import (
     Flask,
     Response,
@@ -30,11 +39,44 @@ from flask import (
     jsonify,
     render_template_string,
     request,
-    send_file,
 )
 from flask_cors import CORS
 
 from detector import AntennaTowerDetector
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+BUNDLED_DATASET_DIR = "cell tower antenna detection.v2i.yolov11"
+BUNDLED_DATA_YAML = PROJECT_ROOT / "data.yaml"
+
+
+def _load_dataset_meta():
+    """Load class names and dataset structure from the bundled data.yaml."""
+    meta = {
+        "dataset_dir": BUNDLED_DATASET_DIR,
+        "nc": 1,
+        "class_names": ["antenna"],
+        "splits": {"train": 0, "valid": 0, "test": 0},
+    }
+    if BUNDLED_DATA_YAML.exists():
+        with open(BUNDLED_DATA_YAML, "r") as f:
+            data = yaml.safe_load(f) or {}
+        names = data.get("names", meta["class_names"])
+        if isinstance(names, dict):
+            meta["class_names"] = [names[k] for k in sorted(names.keys(), key=int)]
+        else:
+            meta["class_names"] = list(names)
+        meta["nc"] = len(meta["class_names"])
+
+        def count_imgs(split):
+            p = PROJECT_ROOT / BUNDLED_DATASET_DIR / split / "images"
+            return len([x for x in p.iterdir()]) if p.is_dir() else 0
+        for s in ("train", "valid", "test"):
+            meta["splits"][s] = count_imgs(s)
+    return meta
+
+
+DATASET_META = _load_dataset_meta()
 
 
 INDEX_HTML = """
@@ -71,7 +113,7 @@ INDEX_HTML = """
 </head>
 <body>
   <h1>📡 Antenna Tower Detector</h1>
-  <p class="sub">YOLO11-powered object detection API. Upload an image to test.</p>
+  <p class="sub">YOLO11-powered object detection API. Model trained on Roboflow <em>Cell Tower Antenna Detection</em> dataset (1 class: <code>antenna</code>).</p>
 
   <div id="drop" class="drop">
     <strong>Drop an image here</strong> or click to browse
@@ -162,14 +204,17 @@ def create_app(
 ) -> Flask:
     if not os.path.exists(weights_path):
         print(f"ERROR: weights not found at {weights_path}")
-        print("Train first: python src/train.py --dataset yourdata.zip")
+        print("Train first: python src/train.py")
         sys.exit(1)
 
     app = Flask(__name__)
     CORS(app)
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50 MB uploads
 
-    detector = AntennaTowerDetector(weights_path, class_names=class_names, device=device)
+    effective_class_names = class_names if class_names else DATASET_META["class_names"]
+    detector = AntennaTowerDetector(
+        weights_path, class_names=effective_class_names, device=device
+    )
     app.detector = detector  # type: ignore[attr-defined]
 
     # Warm up lazily on first request
@@ -187,6 +232,32 @@ def create_app(
             "status": "ok",
             "model": os.path.basename(weights_path),
             "loaded": getattr(app, "_detector_loaded", False),
+            "dataset": {
+                "name": DATASET_META["dataset_dir"],
+                "nc": DATASET_META["nc"],
+                "class_names": DATASET_META["class_names"],
+                "splits": DATASET_META["splits"],
+            },
+        })
+
+    @app.route("/api/info")
+    def api_info():
+        return jsonify({
+            "project": "antenna-tower-detection",
+            "model_arch": "YOLO11 (ultralytics)",
+            "dataset": {
+                "source": "Roboflow - Cell Tower Antenna Detection v2i",
+                "dir": DATASET_META["dataset_dir"],
+                "license": "CC BY 4.0",
+                "nc": DATASET_META["nc"],
+                "class_names": DATASET_META["class_names"],
+                "splits": DATASET_META["splits"],
+            },
+            "api": {
+                "POST /api/detect": "multipart/form-data {image: file, conf, iou, imgsz} -> JSON",
+                "POST /api/detect/render": "same body -> image/png with boxes drawn",
+                "GET  /health": "status + dataset info",
+            },
         })
 
     @app.route("/")

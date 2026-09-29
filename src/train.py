@@ -9,27 +9,32 @@ import yaml
 from ultralytics import YOLO
 
 
+BUNDLED_DATASET_DIR = "cell tower antenna detection.v2i.yolov11"
+BUNDLED_DATA_YAML = "data.yaml"  # canonical copy at project root
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Train YOLO11 for Antenna / Cell Tower Detection"
+        description="Train YOLO11 for Antenna Tower Detection (1 class: 'antenna')"
     )
     parser.add_argument(
         "--dataset",
         type=str,
         default=None,
-        help="Path to your dataset ZIP file (e.g. dataset.zip)",
+        help="Path to a NEW dataset ZIP file (if adding/switching datasets). "
+             "If omitted the bundled dataset is used automatically.",
     )
     parser.add_argument(
         "--extract-dir",
         type=str,
-        default="data/dataset",
-        help="Directory where dataset is / will be extracted",
+        default=BUNDLED_DATASET_DIR,
+        help=f"Directory where dataset is / will be extracted (default: '{BUNDLED_DATASET_DIR}')",
     )
     parser.add_argument(
         "--data-yaml",
         type=str,
         default=None,
-        help="Direct path to data.yaml (skips ZIP extraction)",
+        help=f"Direct path to data.yaml (default: uses ./{BUNDLED_DATA_YAML} which points to the bundled dataset)",
     )
     parser.add_argument(
         "--model",
@@ -167,7 +172,11 @@ def resolve_device(requested: str):
 def main():
     args = parse_args()
 
-    # 1. Extract ZIP if provided, otherwise locate data.yaml
+    project_root = Path(__file__).resolve().parent.parent
+    bundled_yaml_path = str((project_root / BUNDLED_DATA_YAML).resolve())
+    bundled_dataset_root = str((project_root / BUNDLED_DATASET_DIR).resolve())
+
+    # 1. Decide source of dataset
     if args.data_yaml:
         data_yaml_original = args.data_yaml
         dataset_root = str(Path(data_yaml_original).resolve().parent)
@@ -176,15 +185,16 @@ def main():
         data_yaml_original = find_data_yaml(args.extract_dir)
         dataset_root = str(Path(data_yaml_original).resolve().parent)
     else:
-        # Try to auto-find
-        try:
-            data_yaml_original = find_data_yaml(args.extract_dir)
-            dataset_root = str(Path(data_yaml_original).resolve().parent)
-        except FileNotFoundError:
+        # Auto-use the bundled dataset + canonical data.yaml
+        if not (project_root / BUNDLED_DATA_YAML).exists() or \
+           not (project_root / BUNDLED_DATASET_DIR).is_dir():
             print(
-                "ERROR: Provide --dataset <your.zip> or --data-yaml <path/data.yaml>"
+                "ERROR: No bundled dataset found. "
+                "Provide --dataset <your.zip> or --data-yaml <path/data.yaml>"
             )
             sys.exit(1)
+        data_yaml_original = bundled_yaml_path
+        dataset_root = bundled_dataset_root
 
     print(f"\nOriginal data.yaml: {data_yaml_original}")
     print(f"Dataset root       : {dataset_root}")
@@ -193,10 +203,18 @@ def main():
     check_structure(dataset_root)
 
     # 3. Fix and save data.yaml with absolute paths
-    data_yaml_final = "data.yaml"
-    data, data_yaml_final = fix_data_yaml(
-        data_yaml_original, dataset_root, data_yaml_final
-    )
+    if args.data_yaml or args.dataset:
+        # Custom dataset → generate a fixed data.yaml in CWD
+        data_yaml_final = str((Path.cwd() / "data.yaml").resolve())
+        data, data_yaml_final = fix_data_yaml(
+            data_yaml_original, dataset_root, data_yaml_final
+        )
+    else:
+        # Bundled dataset: rewrite bundled data.yaml with absolute paths
+        data, _ = fix_data_yaml(
+            data_yaml_original, dataset_root, bundled_yaml_path
+        )
+        data_yaml_final = bundled_yaml_path
 
     # 4. Print classes and sizes
     class_names = print_classes(data)

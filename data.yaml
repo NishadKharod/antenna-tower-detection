@@ -1,0 +1,16 @@
+path: ./cell tower antenna detection.v2i.yolov11
+
+train: ./cell tower antenna detection.v2i.yolov11/train/images
+val:   ./cell tower antenna detection.v2i.yolov11/valid/images
+test:  ./cell tower antenna detection.v2i.yolov11/test/images
+
+nc: 1
+names:
+  0: antenna
+
+roboflow:
+  workspace: cradpole
+  project: cell-tower-antenna-detection
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/cradpole/cell-tower-antenna-detection/dataset/2
