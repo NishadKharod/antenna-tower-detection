@@ -1,8 +1,8 @@
 path: ./cell tower antenna detection.v2i.yolov11
 
-train: ./cell tower antenna detection.v2i.yolov11/train/images
-val:   ./cell tower antenna detection.v2i.yolov11/valid/images
-test:  ./cell tower antenna detection.v2i.yolov11/test/images
+train: train/images
+val:   valid/images
+test:  test/images
 
 nc: 1
 names:

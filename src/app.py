@@ -42,7 +42,10 @@ from flask import (
 )
 from flask_cors import CORS
 
-from detector import AntennaTowerDetector
+try:
+    from .detector import AntennaTowerDetector
+except ImportError:  # running as `python src/app.py` or gunicorn --chdir src
+    from detector import AntennaTowerDetector
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
