@@ -1,0 +1,57 @@
+# Data
+data/
+dataset/
+*.zip
+*.tar.gz
+
+# Weights
+weights/
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Runs and outputs
+runs/
+tower_detection/
+train/
+val/
+predict/
+*.csv
+*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb.bak
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Env
+.env
+.venv/
+venv/
+env/
+ENV/
