@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['antenna']
+
+roboflow:
+  workspace: cradpole
+  project: cell-tower-antenna-detection
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/cradpole/cell-tower-antenna-detection/dataset/2
