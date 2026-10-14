@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import io
 import os
+import random
+import time
 from dataclasses import dataclass, field, asdict
 from typing import Any, List, Optional, Union
 
+import cv2
 import numpy as np
 from PIL import Image
 from ultralytics import YOLO
@@ -140,9 +143,6 @@ class AntennaTowerDetector:
         """Run detection on a single image."""
         pil_image = self._load_image(image_source)
         width, height = pil_image.size
-        t0 = 0.0
-
-        import time
         t0 = time.perf_counter()
         results = self.model.predict(
             source=pil_image,
@@ -206,14 +206,11 @@ class AntennaTowerDetector:
             pil_image, image_id="rendered", imgsz=imgsz, conf=conf, iou=iou
         )
 
-        import cv2
-        import random
-
-        # Build color palette per class
+        # Deterministic color palette per class name
         palette = {}
         for d in result_obj.detections:
             if d.class_name not in palette:
-                rng = random.Random(hash(d.class_name) & 0xFFFFFFFF)
+                rng = random.Random(d.class_name)
                 palette[d.class_name] = (
                     rng.randint(50, 255),
                     rng.randint(50, 255),

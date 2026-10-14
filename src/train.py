@@ -232,7 +232,7 @@ def main():
     print(" STARTING YOLO11 TRAINING")
     print("========================================\n")
 
-    results = model.train(
+    model.train(
         data=data_yaml_final,
         epochs=args.epochs,
         imgsz=args.imgsz,

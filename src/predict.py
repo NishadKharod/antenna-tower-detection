@@ -66,8 +66,31 @@ def main():
         name=args.name,
     )
 
+    print("\n========================================")
+    print(" OBJECT DETECTIONS")
+    print("========================================")
+    total = 0
+    for result in results:
+        image_name = os.path.basename(result.path) if result.path else "image"
+        boxes = result.boxes
+        if boxes is None or len(boxes) == 0:
+            print(f"\n{image_name}: no detections")
+            continue
+        print(f"\n{image_name}: {len(boxes)} detection(s)")
+        for i in range(len(boxes)):
+            cls_id = int(boxes.cls[i])
+            cls_name = result.names.get(cls_id, f"class_{cls_id}")
+            conf = float(boxes.conf[i])
+            x1, y1, x2, y2 = map(int, boxes.xyxy[i].tolist())
+            print(
+                f"  - {cls_name:20s} conf={conf:.2f} "
+                f"bbox=[{x1}, {y1}, {x2}, {y2}]"
+            )
+        total += len(boxes)
+
     out_dir = os.path.join(args.project, args.name)
-    print(f"\nSaved predictions to: {out_dir}")
+    print(f"\nTotal detections: {total}")
+    print(f"Saved predictions to: {out_dir}")
     print(f"Processed {len(results)} image(s) / frame(s).")
 
 
