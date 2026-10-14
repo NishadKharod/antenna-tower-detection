@@ -12,6 +12,7 @@ weights/
 *.pt
 *.pth
 *.onnx
+!docs/model.onnx
 *.engine
 
 # Runs and outputs

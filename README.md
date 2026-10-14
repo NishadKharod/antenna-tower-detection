@@ -10,6 +10,7 @@ An end-to-end object detection project for identifying **antenna / cell towers**
 - 🎯 **Correct classes** — `nc: 1`, single class: **`antenna`** (matches `data.yaml` exactly)
 - 🌐 **Flask HTTP API** — endpoints your website can call (with CORS enabled)
 - 🖱️ **Built-in drag-and-drop web UI** on `/` for quick testing
+- 🌍 **In-browser demo** — static page in `docs/` runs the ONNX model client-side → host it free on GitHub Pages ([live demo](https://nishadkharod.github.io/antenna-tower-detection/))
 - ⚙️ **Configurable** — GPU auto-detection, early stopping, deterministic seed
 
 ---
@@ -211,6 +212,27 @@ with open("out.png", "wb") as f:
 
 ---
 
+## 🌍 Browser Demo (GitHub Pages)
+
+The `docs/` folder is a self-contained static page that runs the exported ONNX
+model **entirely in the browser** with ONNX Runtime Web — no backend, no uploads.
+
+```bash
+# 1. Export the trained checkpoint to ONNX
+yolo export model=runs/tower_detection/yolo11_tower_detector/weights/best.pt format=onnx imgsz=640
+
+# 2. Copy it next to the demo page
+cp runs/tower_detection/yolo11_tower_detector/weights/best.onnx docs/model.onnx
+
+# 3. Test locally
+python -m http.server 8000 --directory docs   # → http://localhost:8000
+```
+
+To publish on GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / `/docs`**.
+The demo is then live at `https://<username>.github.io/antenna-tower-detection/`.
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -228,6 +250,7 @@ antenna-tower-detection/
 ├── data/
 │   ├── data.example.yaml                             ← example/reference data.yaml
 │   └── .gitkeep
+├── docs/                                             ← 🌍 GitHub Pages demo (index.html + model.onnx)
 └── src/
     ├── __init__.py
     ├── train.py                                      ← train + val + test + predict
